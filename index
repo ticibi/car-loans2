@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Loan Payment Comparison</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937;
+            color: #e5e7eb;
+        }
+        .container {
+            max-width: 95%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background-color: #374151;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .table-container {
+            background-color: #4b5563;
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #6b7280;
+        }
+        th {
+            background-color: #7c3aed;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        td {
+            background-color: #4b5563;
+        }
+        .highlight {
+            background-color: #10b981 !important;
+            color: white;
+            font-weight: bold;
+        }
+        select, input {
+            background-color: #2d3748;
+            color: #e5e7eb;
+            border: 1px solid #6b7280;
+            border-radius: 6px;
+            padding: 8px;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3);
+        }
+        #loanChart {
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-4">
+        <h1 class="text-4xl font-bold text-center mb-8 text-white">Car Loan Payment Comparison</h1>
+        <!-- Loan Details Card -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold mb-6 text-white">Loan Details</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label for="loanAmount" class="block text-sm font-medium text-gray-300">Total Car Price ($)</label>
+                    <input type="number" id="loanAmount" value="58000" min="10000" max="100000" step="100" class="mt-1 block w-full">
+                </div>
+                <div>
+                    <label for="loanTerm" class="block text-sm font-medium text-gray-300">Loan Term (Years)</label>
+                    <select id="loanTerm" class="mt-1 block w-full">
+                        <option value="3">3 Years</option>
+                        <option value="4">4 Years</option>
+                        <option value="5" selected>5 Years</option>
+                        <option value="6">6 Years</option>
+                        <option value="7">7 Years</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="targetPayment" class="block text-sm font-medium text-gray-300">Target Monthly Payment ($)</label>
+                    <select id="targetPayment" class="mt-1 block w-full">
+                        <option value="400">$400</option>
+                        <option value="450">$450</option>
+                        <option value="500">$500</option>
+                        <option value="550">$550</option>
+                        <option value="600">$600</option>
+                        <option value="650" selected>$650</option>
+                        <option value="700">$700</option>
+                        <option value="750">$750</option>
+                        <option value="800">$800</option>
+                        <option value="850">$850</option>
+                        <option value="900">$900</option>
+                    </select>
+                </div>
+            </div>
+            <h3 class="text-xl font-semibold mb-4 text-white">Down Payment Needed ($)</h3>
+            <div class="table-container">
+                <table id="loanTable">
+                    <thead>
+                        <tr>
+                            <th>6%</th>
+                            <th>7%</th>
+                            <th>8%</th>
+                            <th>9%</th>
+                            <th>10.8%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Chart Card -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold mb-6 text-white">Down Payment Comparison</h2>
+            <canvas id="loanChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const loanAmountInput = document.getElementById('loanAmount');
+        const loanTermInput = document.getElementById('loanTerm');
+        const targetPaymentInput = document.getElementById('targetPayment');
+        const loanTable = document.getElementById('loanTable');
+
+        // Chart Setup
+        const ctx = document.getElementById('loanChart').getContext('2d');
+        const loanChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['6%', '7%', '8%', '9%', '10.8%'],
+                datasets: [{
+                    label: 'Down Payment ($)',
+                    data: [],
+                    backgroundColor: '#7c3aed',
+                    borderColor: '#6d28d9',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { 
+                        title: { display: true, text: 'Interest Rate (%)', color: '#e5e7eb' }, 
+                        ticks: { color: '#e5e7eb' } 
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        title: { display: true, text: 'Down Payment ($)', color: '#e5e7eb' }, 
+                        ticks: { color: '#e5e7eb' },
+                        grid: { color: '#6b7280' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Down Payment: $${context.parsed.y.toLocaleString()}`;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        color: '#e5e7eb',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        },
+                        formatter: (value) => value > 0 ? `$${value.toLocaleString()}` : '',
+                        offset: 4
+                    }
+                }
+            },
+            plugins: [{
+                id: 'customDataLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, chartArea: { top, bottom, left, right } } = chart;
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        meta.data.forEach((bar, index) => {
+                            const value = dataset.data[index];
+                            if (value > 0) {
+                                ctx.save();
+                                ctx.fillStyle = '#e5e7eb';
+                                ctx.font = 'bold 12px Inter';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillText(`$${value.toLocaleString()}`, bar.x, bar.y - 5);
+                                ctx.restore();
+                            }
+                        });
+                    });
+                }
+            }]
+        });
+
+        // Calculate Down Payment Needed
+        function calculateDownPayment(targetPayment, interestRate, loanAmount, loanTermYears) {
+            const monthlyRate = interestRate / 12;
+            const numberOfPayments = loanTermYears * 12;
+            // Calculate principal needed for target payment
+            const principal = targetPayment * (Math.pow(1 + monthlyRate, numberOfPayments) - 1) / (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments));
+            // Calculate down payment
+            const downPayment = loanAmount - principal;
+            return downPayment >= 0 ? Math.round(downPayment) : null;
+        }
+
+        // Update Table and Chart
+        function updateLoanData() {
+            const loanAmount = parseFloat(loanAmountInput.value);
+            const loanTermYears = parseInt(loanTermInput.value);
+            const targetPayment = parseFloat(targetPaymentInput.value);
+            const interestRates = [0.06, 0.07, 0.08, 0.09, 0.108];
+
+            // Calculate down payments
+            const downPayments = interestRates.map(rate => calculateDownPayment(targetPayment, rate, loanAmount, loanTermYears));
+            
+            // Find the lowest down payment
+            const validDownPayments = downPayments.filter(dp => dp !== null);
+            const minDownPayment = validDownPayments.length > 0 ? Math.min(...validDownPayments) : null;
+
+            // Update Table
+            const tbody = loanTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            const row = document.createElement('tr');
+            downPayments.forEach((dp, index) => {
+                const cell = document.createElement('td');
+                if (dp !== null) {
+                    cell.textContent = `$${dp.toLocaleString()}`;
+                    if (dp === minDownPayment) {
+                        cell.classList.add('highlight');
+                    }
+                } else {
+                    cell.textContent = '-';
+                }
+                row.appendChild(cell);
+            });
+            tbody.appendChild(row);
+
+            // Update Chart
+            loanChart.data.datasets[0].data = downPayments.map(dp => dp || 0);
+            loanChart.data.datasets[0].label = `Target Payment: $${targetPayment}`;
+            loanChart.update();
+        }
+
+        // Event Listeners
+        loanAmountInput.addEventListener('input', updateLoanData);
+        loanTermInput.addEventListener('change', updateLoanData);
+        targetPaymentInput.addEventListener('change', updateLoanData);
+
+        // Initial Calculation
+        updateLoanData();
+    </script>
+</body>
+</html>
